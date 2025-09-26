@@ -1,0 +1,7 @@
+syntax = "proto3";
+
+package blog.v1;
+
+message BoolResponse {
+  bool success = 1;
+}

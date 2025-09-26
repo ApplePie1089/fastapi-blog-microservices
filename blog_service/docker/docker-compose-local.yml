@@ -1,0 +1,44 @@
+version: "3.9"
+
+services:
+  blog-service:
+    build:
+      context: ../..
+      dockerfile: blog_service/docker/Dockerfile
+    container_name: blog-service
+    restart: unless-stopped
+    working_dir: /usr/src/app
+    env_file:
+      - ../../blog_service/.env.local
+    environment:
+      APP_ENV: "LOCAL"
+    entrypoint: /bin/bash /usr/src/app/entry.sh
+    volumes:
+      - ../../blog_service:/usr/src/app/
+    ports:
+      - "57777:57777"
+    depends_on:
+      postgres-blog:
+        condition: service_healthy
+
+  postgres-blog:
+    container_name: postgres-blog
+    image: postgres:15
+    restart: always
+    environment:
+      POSTGRES_DB: "blog-service-db"
+      POSTGRES_USER: "login"
+      POSTGRES_PASSWORD: "password"
+    healthcheck:
+      test: [ "CMD", "pg_isready", "-U", "login" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - blog-data:/var/lib/postgresql/data
+    ports:
+      - "5434:5432"
+
+volumes:
+  blog-data:
+    driver: local

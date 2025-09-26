@@ -1,0 +1,64 @@
+# Temporary files and development artifacts
+.temp/
+
+# Compiled Python bytecode
+*.py[cod]
+*.pyc
+__pycache__/
+
+# Python environments
+venv/
+.venv
+
+# Testing
+.pytest_cache/
+.coverage
+.tox/
+.nox/
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+TEST*.xml
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
+
+# IDEs
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Database
+*.sqlite
+*.db
+
+# Node modules (if any)
+node_modules/
+
+# Package files
+*.jar
+*.war
+*.nar
+*.ear
+*.zip
+*.tar.gz
+*.rar

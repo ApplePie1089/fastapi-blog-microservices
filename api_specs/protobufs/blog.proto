@@ -1,0 +1,106 @@
+syntax = "proto3";
+
+package blog.v1;
+
+import "common.proto";
+
+message Category {
+  int64 id = 1;
+  string title = 2;
+  string slug = 3;
+  optional string description = 4;
+  optional double created_at = 5;
+  optional double updated_at = 6;
+}
+
+message CreateCategoryRequest {
+  string title = 1;
+  string slug = 2;
+  optional string description = 3;
+}
+
+message UpdateCategoryRequest {
+  int64 id = 1;
+  optional string title = 2;
+  optional string slug = 3;
+  optional string description = 4;
+}
+
+message GetCategoryRequest {
+  string slug = 1;
+}
+
+message DeleteCategoryRequest {
+  int64 id = 1;
+}
+
+message GetCategoriesRequest {
+}
+
+message GetCategoriesResponse {
+  repeated Category categories = 1;
+}
+
+message Post {
+  int64 id = 1;
+  string title = 2;
+  string slug = 3;
+  string content_html = 4;
+  int64 author_id = 5;
+  int64 category_id = 6;
+  string author_email = 7;
+  string category_title = 8;
+  optional double created_at = 9;
+  optional double updated_at = 10;
+}
+
+message CreatePostRequest {
+  string title = 1;
+  string slug = 2;
+  string content_html = 3;
+  int64 author_id = 4;
+  int64 category_id = 5;
+}
+
+message UpdatePostRequest {
+  int64 id = 1;
+  optional string title = 2;
+  optional string slug = 3;
+  optional string content_html = 4;
+  optional int64 category_id = 5;
+}
+
+message GetPostRequest {
+  string slug = 1;
+}
+
+message DeletePostRequest {
+  int64 id = 1;
+}
+
+message GetPostsRequest {
+  optional int64 category_id = 1;
+}
+
+message GetPostsResponse {
+  repeated Post posts = 1;
+}
+
+message GetPostsByCategoryRequest {
+  string category_slug = 1;
+}
+
+service BlogService {
+  rpc CreateCategory(CreateCategoryRequest) returns (Category);
+  rpc GetCategory(GetCategoryRequest) returns (Category);
+  rpc GetCategories(GetCategoriesRequest) returns (GetCategoriesResponse);
+  rpc UpdateCategory(UpdateCategoryRequest) returns (Category);
+  rpc DeleteCategory(DeleteCategoryRequest) returns (BoolResponse);
+
+  rpc CreatePost(CreatePostRequest) returns (Post);
+  rpc GetPost(GetPostRequest) returns (Post);
+  rpc GetPosts(GetPostsRequest) returns (GetPostsResponse);
+  rpc GetPostsByCategory(GetPostsByCategoryRequest) returns (GetPostsResponse);
+  rpc UpdatePost(UpdatePostRequest) returns (Post);
+  rpc DeletePost(DeletePostRequest) returns (BoolResponse);
+}

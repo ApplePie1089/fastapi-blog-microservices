@@ -1,0 +1,169 @@
+version: "3.9"
+
+services:
+  api-gateway-testing:
+    build:
+      context: ../..
+      dockerfile: api_gateway/docker/Dockerfile
+    image: blog-api-gateway:testing
+    container_name: api-gateway-testing
+    restart: unless-stopped
+    working_dir: /app
+    env_file:
+      - ../.env.testing
+    environment:
+      APP_ENV: "TESTING"
+    ports:
+      - "8081:80"
+    depends_on:
+      users-service-testing:
+        condition: service_healthy
+      auth-service-testing:
+        condition: service_healthy
+      blog-service-testing:
+        condition: service_healthy
+    volumes:
+      - ../:/app/
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost/ready"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  users-service-testing:
+    build:
+      context: ../..
+      dockerfile: users_service/docker/Dockerfile
+    image: blog-users-service:testing
+    container_name: users-service-testing
+    restart: always
+    environment:
+      APP_ENV: "TESTING"
+      PG_HOST: "postgres-testing"
+    entrypoint: /bin/bash /usr/src/app/entry.sh
+    expose:
+      - 57776
+    depends_on:
+      postgres-init-testing:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "bash", "-c", "</dev/tcp/localhost/57776"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  auth-service-testing:
+    build:
+      context: ../..
+      dockerfile: auth_service/docker/Dockerfile
+    image: blog-auth-service:testing
+    container_name: auth-service-testing
+    restart: always
+    environment:
+      APP_ENV: "TESTING"
+    entrypoint: /bin/bash /usr/src/app/entry.sh
+    expose:
+      - 57775
+    depends_on:
+      postgres-init-testing:
+        condition: service_completed_successfully
+      redis-testing:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "bash", "-c", "</dev/tcp/localhost/57775"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  blog-service-testing:
+    build:
+      context: ../..
+      dockerfile: blog_service/docker/Dockerfile
+    image: blog-blog-service:testing
+    container_name: blog-service-testing
+    restart: always
+    environment:
+      APP_ENV: "TESTING"
+      PG_HOST: "postgres-testing"
+    entrypoint: /bin/bash /usr/src/app/entry.sh
+    expose:
+      - 57777
+    depends_on:
+      postgres-init-testing:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "bash", "-c", "</dev/tcp/localhost/57777"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  postgres-init-testing:
+    container_name: postgres-init-testing
+    image: postgres:15-alpine
+    command: sh /multi_db_init.sh
+    environment:
+      POSTGRES_USER: "login"
+      POSTGRES_PASSWORD: "password"
+      POSTGRES_HOST: "postgres-testing"
+      POSTGRES_PORT: "5432"
+      PGPASSWORD: "password"
+      POSTGRES_MULTIPLE_DATABASES: |
+        users-service-testing-db
+        auth-service-testing-db
+        blog-service-testing-db
+    depends_on:
+      postgres-testing:
+        condition: service_healthy
+    volumes:
+      - ../docker/multi_db_init.sh:/multi_db_init.sh:ro
+
+  postgres-testing:
+    container_name: postgres-testing
+    image: postgres:15-alpine
+    restart: always
+    environment:
+      POSTGRES_DB: "test-db"
+      POSTGRES_USER: "login"
+      POSTGRES_PASSWORD: "password"
+    networks:
+      default:
+        aliases:
+          - postgres-users-testing
+          - postgres-auth-testing
+          - postgres-blog-testing
+    ports:
+      - "5434:5432"
+    volumes:
+      - postgres-test-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "login", "-d", "postgres"]
+      interval: 5s
+      timeout: 15s
+      retries: 5
+
+  redis-testing:
+    container_name: redis-testing
+    image: redis:7-alpine
+    restart: always
+    environment:
+      REDIS_PASSWORD: "password"
+    ports:
+      - "6380:6379"
+    networks:
+      default:
+        aliases:
+          - redis-auth-testing
+    healthcheck:
+      test: [ "CMD", "redis-cli", "--raw", "incr", "ping" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    command: redis-server --requirepass password
+    volumes:
+      - redis-test-data:/data
+
+volumes:
+  postgres-test-data:
+    driver: local
+  redis-test-data:
+    driver: local

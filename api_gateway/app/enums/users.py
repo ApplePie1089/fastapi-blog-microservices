@@ -1,0 +1,7 @@
+from enum import Enum
+
+
+class UserRole(str, Enum):
+    USER_ROLE_UNSPECIFIED = "USER_ROLE_UNSPECIFIED"
+    USER_ROLE_USER = "USER_ROLE_USER"
+    USER_ROLE_ADMIN = "USER_ROLE_ADMIN"

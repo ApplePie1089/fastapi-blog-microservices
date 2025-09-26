@@ -1,0 +1,33 @@
+syntax = "proto3";
+
+package blog.v1;
+
+
+message UserCreateRequest {
+  int64 user_id = 1;
+  string email = 2;
+  string password = 3;
+}
+
+message LoginRequest {
+  string email = 1;
+  string password = 2;
+}
+
+message RefreshRequest {
+  string refresh_token = 1;
+}
+
+message TokenResponse {
+  string access_token = 1;
+  string refresh_token = 2;
+  int64 expires_in = 3;
+  string token_type = 4;
+  int64 refresh_token_expires_in = 5;
+}
+
+service AuthService {
+  rpc CreateUser(UserCreateRequest) returns (TokenResponse);
+  rpc Login(LoginRequest) returns (TokenResponse);
+  rpc Refresh(RefreshRequest) returns (TokenResponse);
+}

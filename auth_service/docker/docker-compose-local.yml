@@ -1,0 +1,69 @@
+version: "3.9"
+
+services:
+  auth-service:
+    build:
+      context: ../..
+      dockerfile: auth_service/docker/Dockerfile
+    container_name: auth-service
+    restart: unless-stopped
+    working_dir: /usr/src/app
+    env_file:
+      - ../../auth_service/.env.local
+    environment:
+      APP_ENV: "LOCAL"
+    entrypoint: /bin/bash /usr/src/app/entry.sh
+    volumes:
+      - ../../auth_service:/usr/src/app/
+    ports:
+      - "57775:57775"
+    depends_on:
+      postgres-auth:
+        condition: service_healthy
+      redis-auth:
+        condition: service_healthy
+
+  postgres-auth:
+    container_name: postgres-auth
+    image: postgres:15
+    restart: always
+    environment:
+      POSTGRES_DB: "auth-service-db"
+      POSTGRES_USER: "login"
+      POSTGRES_PASSWORD: "password"
+    healthcheck:
+      test: [ "CMD", "pg_isready", "-U", "login" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - auth-data:/var/lib/postgresql/data
+    ports:
+      - "5434:5432"
+
+  redis-auth:
+    container_name: redis-auth
+    image: redis:7-alpine
+    restart: always
+    environment:
+      REDIS_PASSWORD: "password"
+    ports:
+      - "6379:6379"
+    networks:
+      default:
+        aliases:
+          - redis-auth
+    healthcheck:
+      test: [ "CMD", "redis-cli", "--raw", "incr", "ping" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    command: redis-server --requirepass password
+    volumes:
+      - redis-data:/data
+
+volumes:
+  auth-data:
+    driver: local
+  redis-data:
+    driver: local

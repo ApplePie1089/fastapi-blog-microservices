@@ -1,0 +1,44 @@
+version: "3.9"
+
+services:
+  users-service:
+    build:
+      context: ../..
+      dockerfile: users_service/docker/Dockerfile
+    container_name: users-service
+    restart: unless-stopped
+    working_dir: /usr/src/app
+    env_file:
+      - ../../users_service/.env.local
+    environment:
+      APP_ENV: "LOCAL"
+    entrypoint: /bin/bash /usr/src/app/entry.sh
+    volumes:
+      - ../../users_service:/usr/src/app/
+    ports:
+      - "57776:57776"
+    depends_on:
+      postgres-users:
+        condition: service_healthy
+
+  postgres-users:
+    container_name: postgres-users
+    image: postgres:15
+    restart: always
+    environment:
+      POSTGRES_DB: "users-service-db"
+      POSTGRES_USER: "login"
+      POSTGRES_PASSWORD: "password"
+    healthcheck:
+      test: [ "CMD", "pg_isready", "-U", "login" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - users-data:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+
+volumes:
+  users-data:
+    driver: local

@@ -1,0 +1,11 @@
+version: "3.9"
+
+services:
+  proto-generator:
+    build:
+      context: ../
+      dockerfile: docker/Dockerfile
+    container_name: proto-generator
+    tty: true
+    volumes:
+      - ../.:/usr/src/app

@@ -1,0 +1,169 @@
+version: "3.9"
+
+services:
+  api-gateway:
+    build:
+      context: ../..
+      dockerfile: api_gateway/docker/Dockerfile
+    image: blog-api-gateway:local
+    container_name: api-gateway
+    restart: unless-stopped
+    working_dir: /app
+    env_file:
+      - ../../api_gateway/.env.local
+    environment:
+      APP_ENV: "LOCAL"
+    ports:
+      - "8080:80"
+    depends_on:
+      users-service:
+        condition: service_healthy
+      auth-service:
+        condition: service_healthy
+      blog-service:
+        condition: service_healthy
+    volumes:
+      - ../../api_gateway:/app/
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost/ready"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  users-service:
+    build:
+      context: ../..
+      dockerfile: users_service/docker/Dockerfile
+    image: blog-users-service:local
+    container_name: users-service
+    restart: always
+    environment:
+      APP_ENV: "LOCAL"
+      PG_HOST: "postgres-local"
+    entrypoint: /bin/bash /usr/src/app/entry.sh
+    expose:
+      - 57776
+    depends_on:
+      postgres-init-local:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "bash", "-c", "</dev/tcp/localhost/57776"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  auth-service:
+    build:
+      context: ../..
+      dockerfile: auth_service/docker/Dockerfile
+    image: blog-auth-service:local
+    container_name: auth-service
+    restart: always
+    environment:
+      APP_ENV: "LOCAL"
+    entrypoint: /bin/bash /usr/src/app/entry.sh
+    expose:
+      - 57775
+    depends_on:
+      postgres-init-local:
+        condition: service_completed_successfully
+      redis-local:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "bash", "-c", "</dev/tcp/localhost/57775"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  blog-service:
+    build:
+      context: ../..
+      dockerfile: blog_service/docker/Dockerfile
+    image: blog-blog-service:local
+    container_name: blog-service
+    restart: always
+    environment:
+      APP_ENV: "LOCAL"
+      PG_HOST: "postgres-local"
+    entrypoint: /bin/bash /usr/src/app/entry.sh
+    expose:
+      - 57777
+    depends_on:
+      postgres-init-local:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "bash", "-c", "</dev/tcp/localhost/57777"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  postgres-init-local:
+    container_name: postgres-init-local
+    image: postgres:15-alpine
+    command: sh /multi_db_init.sh
+    environment:
+      POSTGRES_USER: "login"
+      POSTGRES_PASSWORD: "password"
+      POSTGRES_HOST: "postgres-local"
+      POSTGRES_PORT: "5432"
+      PGPASSWORD: "password"
+      POSTGRES_MULTIPLE_DATABASES: |
+        users-service-db
+        auth-service-db
+        blog-service-db
+    depends_on:
+      postgres-local:
+        condition: service_healthy
+    volumes:
+      - ./multi_db_init.sh:/multi_db_init.sh:ro
+
+  postgres-local:
+    container_name: postgres-local
+    image: postgres:15-alpine
+    restart: always
+    environment:
+      POSTGRES_DB: "local-db"
+      POSTGRES_USER: "login"
+      POSTGRES_PASSWORD: "password"
+    networks:
+      default:
+        aliases:
+          - postgres-users
+          - postgres-auth
+          - postgres-blog
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "login", "-d", "postgres"]
+      interval: 5s
+      timeout: 15s
+      retries: 5
+
+  redis-local:
+    container_name: redis-local
+    image: redis:7-alpine
+    restart: always
+    environment:
+      REDIS_PASSWORD: "password"
+    ports:
+      - "6379:6379"
+    networks:
+      default:
+        aliases:
+          - redis-auth
+    healthcheck:
+      test: [ "CMD", "redis-cli", "--raw", "incr", "ping" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    command: redis-server --requirepass password
+    volumes:
+      - redis-data:/data
+
+volumes:
+  postgres-data:
+    driver: local
+  redis-data:
+    driver: local

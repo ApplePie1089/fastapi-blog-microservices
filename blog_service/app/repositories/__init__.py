@@ -1,0 +1,2 @@
+from app.repositories.categories import CategoriesRepository
+from app.repositories.posts import PostsRepository

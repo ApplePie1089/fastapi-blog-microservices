@@ -1,0 +1,1 @@
+# API Specs package for FastAPI Blog Backend
