@@ -38,12 +38,13 @@ Backend для блога с микросервисной архитектуро
 
 **Linux (через скрипт):**
 ```bash
-cd api_gateway
+cd fastapi-blog-microservices/api_gateway
 ./local_up.sh
 ```
 
 **Все ОС (через Docker Compose):**
 ```bash
+cd fastapi-blog-microservices
 docker-compose -f api_gateway/docker/docker-compose-local.yml up -d --build
 ```
 
@@ -56,25 +57,27 @@ docker-compose -f api_gateway/docker/docker-compose-local.yml up -d --build
 
 **Linux:**
 ```bash
-cd api_gateway
+cd fastapi-blog-microservices/api_gateway
 ./local_down.sh
 ```
 
 **Все ОС:**
 ```bash
-docker-compose -f api_gateway/docker/docker-compose-local.yml down
+cd fastapi-blog-microservices
+docker-compose -f api_gateway/docker/docker-compose-local.yml down -v
 ```
 
 ## Тестирование
 
 **Linux (автоматический запуск):**
 ```bash
-cd api_gateway
+cd fastapi-blog-microservices/api_gateway
 ./run_tests.sh
 ```
 
 **Все ОС (вручную):**
 ```bash
+cd fastapi-blog-microservices
 docker-compose -f api_gateway/docker/docker-compose-tests.yml up -d --build
 # Подождать готовности сервисов
 docker exec api-gateway-testing pytest tests/functional
@@ -95,15 +98,15 @@ docker exec api-gateway-testing pytest tests/functional
 
 ```bash
 # Сервис аутентификации
-cd auth_service
+cd fastapi-blog-microservices/auth_service
 ./local_up.sh
 
 # Сервис пользователей
-cd users_service
+cd fastapi-blog-microservices/users_service
 ./local_up.sh
 
 # Сервис блога
-cd blog_service
+cd fastapi-blog-microservices/blog_service
 ./local_up.sh
 ```
 
@@ -114,7 +117,7 @@ cd blog_service
 При изменении `.proto` файлов в `api_specs/protobufs/`:
 
 ```bash
-cd api_specs
+cd fastapi-blog-microservices/api_specs
 docker compose -f docker/docker-compose.yml run --rm proto-generator /bin/bash generate_code.sh
 ```
 

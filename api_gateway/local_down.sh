@@ -4,4 +4,4 @@ if [ -z "${1}" ]; then
 else
   COMPOSE_POSTFIX=$1
 fi
-docker compose -f "docker/docker-compose-$COMPOSE_POSTFIX.yml" down
+docker compose -f "docker/docker-compose-$COMPOSE_POSTFIX.yml" down -v

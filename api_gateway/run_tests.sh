@@ -2,4 +2,4 @@ if ! [ -x "$(command -v docker-compose)" ]; then   alias docker-compose="docker 
 ./local_up.sh tests
 docker exec api-gateway-testing /bin/bash wait_for_start.sh
 docker exec api-gateway-testing pytest tests/functional
-./local_down.sh tests
+docker compose -f "docker/docker-compose-tests.yml" down -v

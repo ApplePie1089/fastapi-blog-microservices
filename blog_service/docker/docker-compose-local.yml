@@ -37,7 +37,7 @@ services:
     volumes:
       - blog-data:/var/lib/postgresql/data
     ports:
-      - "5434:5432"
+      - "5433:5432"
 
 volumes:
   blog-data:

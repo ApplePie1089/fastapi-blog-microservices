@@ -116,6 +116,7 @@ services:
         condition: service_healthy
     volumes:
       - ../docker/multi_db_init.sh:/multi_db_init.sh:ro
+      - postgres-init-test-data:/var/lib/postgresql/data
 
   postgres-testing:
     container_name: postgres-testing
@@ -132,7 +133,7 @@ services:
           - postgres-auth-testing
           - postgres-blog-testing
     ports:
-      - "5434:5432"
+      - "5433:5432"
     volumes:
       - postgres-test-data:/var/lib/postgresql/data
     healthcheck:
@@ -164,6 +165,8 @@ services:
 
 volumes:
   postgres-test-data:
+    driver: local
+  postgres-init-test-data:
     driver: local
   redis-test-data:
     driver: local
