@@ -81,6 +81,7 @@ cd fastapi-blog-microservices
 docker-compose -f api_gateway/docker/docker-compose-tests.yml up -d --build
 # Подождать готовности сервисов
 docker exec api-gateway-testing pytest tests/functional
+docker-compose -f api_gateway/docker/docker-compose-tests.yml down -v
 ```
 
 Тесты покрывают:
